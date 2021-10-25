@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"encoding/json"
+	"time"
 )
 
 func TestSpecification(t *testing.T) {
@@ -34,9 +35,11 @@ func TestStatus(t *testing.T) {
 	assert.Equal(t, []byte(blob), marshalResult)
 }
 
-// func TestCheck(t *testing.T) {
-// 	config := Config()
-// 	status, err := Check(config)
+func TestCheck(t *testing.T) {
+	config := Config{"token", time.Now()}
+	airbyteStatus, err := Check(config)
 
-// 	assert.Nil(t, err, "Shouldn't return an error")
-// }
+	assert.Nil(t, err, "Shouldn't return an error")
+	assert.Equal(t, Succeeded, airbyteStatus.status)
+	assert.NotZero(t, airbyteStatus.message)
+}

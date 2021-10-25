@@ -35,8 +35,33 @@ func main() {
 			{
 				Name:  "check",
 				Usage: "The check command attempts to connect to the API.",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name: "config",
+						Usage: "A JSON configuration object.",
+					},
+				},
 				Action: func(c *cli.Context) error {
 					log.Println("Hello, check!")
+					log.Println(c.String("config"))
+
+					// TODO
+					var config internal.Config
+
+					airbyteStatus, err := internal.Check(config)
+
+					if err != nil {
+						panic(err)
+					}
+
+					statusBytes, err := json.Marshal(airbyteStatus)
+
+					if err != nil {
+						panic(err)
+					}
+
+					fmt.Println(string(statusBytes))
+
 					return nil
 				},
 			},

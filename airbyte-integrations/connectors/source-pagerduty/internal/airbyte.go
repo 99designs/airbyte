@@ -68,6 +68,11 @@ func (status Status) MarshalJSON() ([]byte, error) {
 
 type AirbyteConnectionStatus struct {
 	// TODO: We can unpack this as an enum
-	status  string
+	status  Status
 	message string
+}
+
+func Check(config Config) (AirbyteConnectionStatus, error) {
+	var status AirbyteConnectionStatus
+	return status, nil
 }
