@@ -22,8 +22,15 @@ func Specification() (AirbyteMessage, error) {
 }
 
 func Check(config Config) (AirbyteMessage, error) {
+	connectionStatus := AirbyteConnectionStatus{
+		Status: Succeeded,
+		Message: "Yay!",
+	}
+
 	message := AirbyteMessage{
 		MessageType: ConnectionStatus,
+		ConnectionStatus: &connectionStatus,
 	}
+
 	return message, nil
 }

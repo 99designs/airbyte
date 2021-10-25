@@ -10,12 +10,12 @@ func TestSpecification(t *testing.T) {
 	m, err := Specification()
 
 	assert.Nil(t, err, "Shouldn't return an error")
-	assert.Equal(t, Spec, m.messageType)
-	assert.NotZero(t, m.spec)
-	assert.NotZero(t, m.spec.DocumentationUrl, "Always provide documentation")
+	assert.Equal(t, Spec, m.MessageType)
+	assert.NotZero(t, m.Spec)
+	assert.NotZero(t, m.Spec.DocumentationUrl, "Always provide documentation")
 	assert.NotZero(
 		t,
-		m.spec.ConnectionSpecification,
+		m.Spec.ConnectionSpecification,
 		"Always provide specificification",
 	)
 }
@@ -25,6 +25,6 @@ func TestCheck(t *testing.T) {
 	m, err := Check(config)
 
 	assert.Nil(t, err, "Shouldn't return an error")
-	assert.Equal(t, ConnectionStatus, m.messageType)
-	assert.NotZero(t, m.connectionStatus)
+	assert.Equal(t, ConnectionStatus, m.MessageType)
+	assert.NotZero(t, m.ConnectionStatus)
 }

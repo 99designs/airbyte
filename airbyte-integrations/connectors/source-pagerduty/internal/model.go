@@ -12,9 +12,8 @@ type ConnectorSpecification struct {
 }
 
 type Config struct {
-	apiToken string `json:"api_token"`
-	// TODO: We can unpack this as a date
-	startDate time.Time `json:"start_date"`
+	ApiToken string `json:"api_token"`
+	StartDate time.Time `json:"start_date"`
 }
 
 type Status int
@@ -31,9 +30,9 @@ func (status *Status) UnmarshalJSON(b []byte) error {
 	}
 
 	switch s {
-	case "succeeded":
+	case "SUCCEEDED":
 		*status = Succeeded
-	case "failed":
+	case "FAILED":
 		*status = Failed
 	default:
 		errors.New("Unknown status")
@@ -47,9 +46,9 @@ func (status Status) MarshalJSON() ([]byte, error) {
 	var s string
 	switch status {
 	case Succeeded:
-		s = "succeeded"
+		s = "SUCCEEDED"
 	case Failed:
-		s = "failed"
+		s = "FAILED"
 	}
 
 	return json.Marshal(s)
@@ -57,8 +56,8 @@ func (status Status) MarshalJSON() ([]byte, error) {
 
 type AirbyteConnectionStatus struct {
 	// TODO: We can unpack this as an enum
-	status  Status
-	message string
+	Status Status `json:"status"`
+	Message string `json:"message,omitempty"`
 }
 
 type MessageType int
