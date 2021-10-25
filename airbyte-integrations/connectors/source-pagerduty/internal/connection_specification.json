@@ -4,15 +4,16 @@
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "PagerDuty Spec",
         "type": "object",
-        "required": [],
+        "required": ["api_token"],
         "additionalProperties": false,
         "properties": {
             "api_token": {
                 "title": "API token",
                 "type": "string",
-                "description": "PagerDuty API Token. See <a href=\"https://developer.pagerduty.com/docs/ZG9jOjExMDI5NTUx-authentication#api-token-authentication\">API Token Authentication</a> for more information on how to obtain a token.",
+                "description": "PagerDuty API Token. See <a href=\"https://developer.pagerduty.com/docs/ZG9jOjExMDI5NTUx-authentication#api-token-authentication\">API Token Authentication</a> for more information on how to obtain a token. Alternatively you can use the test token (y_NbAkKc66ryYTWUXYEuz) which is entered by default.",
 
-                "airbyte_secret": true
+                "airbyte_secret": true,
+                "default": "y_NbAkKc66ryYTWUXYEu"
             },
             "start_date": {
                 "title": "Start date",

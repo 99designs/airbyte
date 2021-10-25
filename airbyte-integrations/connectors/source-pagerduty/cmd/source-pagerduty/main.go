@@ -8,7 +8,61 @@ import (
 	"log"
 	"os"
 	"fmt"
+	"io/ioutil"
 )
+
+func spec(c *cli.Context) error {
+	message, err := internal.Specification()
+
+	if err != nil {
+		panic(err)
+	}
+
+	mBytes, err := json.Marshal(message)
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(mBytes))
+
+	return nil
+}
+
+func check(c *cli.Context) error {
+	bytes, err := ioutil.ReadFile(c.String("config"))
+	log.Println(string(bytes))
+
+	if err != nil {
+		panic(err)
+	}
+
+	var config internal.Config
+
+	err = json.Unmarshal(bytes, &config)
+
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println(config)
+
+	airbyteStatus, err := internal.Check(config)
+
+	if err != nil {
+		panic(err)
+	}
+
+	statusBytes, err := json.Marshal(airbyteStatus)
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(statusBytes))
+
+	return nil
+}
 
 func main() {
 	app := &cli.App{
@@ -18,19 +72,7 @@ func main() {
 			{
 				Name:  "spec",
 				Usage: "Returns the connector specification.",
-				Action: func(c *cli.Context) error {
-					spec, err := internal.Specification()
-
-					if err != nil {
-						panic(err)
-					}
-
-					specBytes, err := json.Marshal(spec)
-
-					fmt.Println(string(specBytes))
-
-					return nil
-				},
+				Action: spec,
 			},
 			{
 				Name:  "check",
@@ -38,32 +80,10 @@ func main() {
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name: "config",
-						Usage: "A JSON configuration object.",
+						Usage: "The filepath of a json file containing the config.",
 					},
 				},
-				Action: func(c *cli.Context) error {
-					log.Println("Hello, check!")
-					log.Println(c.String("config"))
-
-					// TODO
-					var config internal.Config
-
-					airbyteStatus, err := internal.Check(config)
-
-					if err != nil {
-						panic(err)
-					}
-
-					statusBytes, err := json.Marshal(airbyteStatus)
-
-					if err != nil {
-						panic(err)
-					}
-
-					fmt.Println(string(statusBytes))
-
-					return nil
-				},
+				Action: check,
 			},
 			{
 				Name:  "discover",
