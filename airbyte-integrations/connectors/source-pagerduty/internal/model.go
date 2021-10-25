@@ -113,12 +113,14 @@ func (m MessageType) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s)
 }
 
+type AirbyteCatalog interface{}
+
 type AirbyteMessage struct {
 	MessageType MessageType `json:"type"`
-	// log AirbyteLogMessage
+	// Log *AirbyteLogMessage
 	Spec *ConnectorSpecification `json:"spec,omitempty"`
 	ConnectionStatus *AirbyteConnectionStatus `json:"connectionStatus,omitempty"`
-	// catalog AirbyteCatalog
-	// record AirbyteRecordMessage
-	// state AirbyteStateMessae
+	Catalog *AirbyteCatalog `json:"catalog,omitempty"`
+	// Record *AirbyteRecordMessage
+	// State *AirbyteStateMessae
 }

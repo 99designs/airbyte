@@ -28,3 +28,12 @@ func TestCheck(t *testing.T) {
 	assert.Equal(t, ConnectionStatus, m.MessageType)
 	assert.NotZero(t, m.ConnectionStatus)
 }
+
+func TestDiscover(t *testing.T) {
+	config := Config{"token", time.Now()}
+	m, err := Discover(config)
+
+	assert.Nil(t, err, "Shouldn't return an error")
+	assert.Equal(t, Catalog, m.MessageType)
+	assert.NotZero(t, m.Catalog)
+}

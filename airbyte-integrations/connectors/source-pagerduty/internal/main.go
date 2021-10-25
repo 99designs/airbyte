@@ -9,6 +9,9 @@ import (
 //go:embed connection_specification.json
 var connectorSpecificationBytes []byte
 
+//go:embed catalog.json
+var catalogBytes []byte
+
 func Specification() (AirbyteMessage, error) {
 	var connectorSpecification ConnectorSpecification
 
@@ -40,6 +43,7 @@ func Check(config Config) (AirbyteMessage, error) {
 			Status: Failed,
 			Message: err.Error(),
 		}
+
 	} else {
 		connectionStatus = AirbyteConnectionStatus{
 			Status: Succeeded,
@@ -48,4 +52,17 @@ func Check(config Config) (AirbyteMessage, error) {
 	}
 
 	return message, nil
+}
+
+func Discover(config Config) (AirbyteMessage, error) {
+	var catalog AirbyteCatalog
+
+	err := json.Unmarshal(catalogBytes, &catalog)
+
+	message := AirbyteMessage{
+		MessageType: Catalog,
+		Catalog: &catalog,
+	}
+
+	return message, err
 }
