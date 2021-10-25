@@ -4,9 +4,10 @@ import (
 	_ "embed"
 	"encoding/json"
 	"github.com/urfave/cli/v2"
-	"internal"
+	"github.com/airbytehq/airbyte-integrations/connectors/source-pagerduty/internal"
 	"log"
 	"os"
+	"fmt"
 )
 
 func main() {
@@ -18,14 +19,15 @@ func main() {
 				Name:  "spec",
 				Usage: "Returns the connector specification.",
 				Action: func(c *cli.Context) error {
-					err, spec := Specification()
+					spec, err := internal.Specification()
 
 					if err != nil {
 						panic(err)
 					}
 
-					specBytes, err := json.Marshall(spec)
-					log.Println(string(specBytes))
+					specBytes, err := json.Marshal(spec)
+
+					fmt.Println(string(specBytes))
 
 					return nil
 				},
