@@ -8,7 +8,7 @@ import (
 )
 
 func TestStatus(t *testing.T) {
-	blob := `["succeeded","failed"]`
+	blob := `["SUCCEEDED","FAILED"]`
 	list := []Status{Succeeded, Failed}
 
 	var unmarshalResult []Status
