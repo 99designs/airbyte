@@ -34,7 +34,7 @@ public class AWSSecretManagerPersistenceIntegrationTest {
   @AfterEach
   void tearDown() throws IOException {
     // TODO: Delete all secrets that share the coordinateBase
-    List<SecretCoordinate> secrets = persistence.listSecretVersions(coordinateBase);
+    List<SecretCoordinate> secrets = persistence.list(coordinateBase);
     System.out.println(secrets);
 
     secrets.forEach(secret -> persistence.delete(secret));

@@ -5,24 +5,27 @@
 package io.airbyte.config.persistence.split_secrets;
 
 import io.airbyte.commons.lang.Exceptions;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.function.Supplier;
-import java.util.List;
+import java.util.stream.Collectors;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
+import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
+import software.amazon.awssdk.services.secretsmanager.model.Filter;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
-import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
-import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.ListSecretsRequest;
 import software.amazon.awssdk.services.secretsmanager.model.ListSecretsResponse;
-import software.amazon.awssdk.services.secretsmanager.model.Filter;
-import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
+import software.amazon.awssdk.services.secretsmanager.model.PutResourcePolicyRequest;
+import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.sts.StsClient;
 
 public class AWSSecretManagerPersistence implements SecretPersistence {
 
-  private final Supplier<SecretsManagerClient> clientSupplier;
+  private final Supplier<SecretsManagerClient> secretManagerClientSupplier;
+  private final Supplier<StsClient> stsClientSupplier;
 
   /**
    * A private constructor class which will be used by getEphemeral and
@@ -32,11 +35,16 @@ public class AWSSecretManagerPersistence implements SecretPersistence {
     // The SecretsManagerClient will pull in credentials and configuration from
     // the Default Credential Provider Chain so we don't actually need to bring
     // in the any configuration.
-    this.clientSupplier = () -> getSecretManagerClient();
+    this.secretManagerClientSupplier = () -> getSecretManagerClient();
+    this.stsClientSupplier = () -> getStsClient();
   }
 
   public static SecretsManagerClient getSecretManagerClient() {
     return SecretsManagerClient.builder().build();
+  }
+
+  public static StsClient getStsClient() {
+    return StsClient.builder().build();
   }
 
   /**
@@ -59,7 +67,7 @@ public class AWSSecretManagerPersistence implements SecretPersistence {
 
   @Override
   public Optional<String> read(final SecretCoordinate coordinate) {
-    try (final var client = clientSupplier.get()) {
+    try (final var client = secretManagerClientSupplier.get()) {
       String secretName = coordinate.getFullCoordinate();
 
       GetSecretValueRequest request = GetSecretValueRequest
@@ -78,7 +86,7 @@ public class AWSSecretManagerPersistence implements SecretPersistence {
 
   @Override
   public void write(final SecretCoordinate coordinate, final String payload) {
-    try (final var client = clientSupplier.get()) {
+    try (final var client = secretManagerClientSupplier.get()) {
       String secretName = coordinate.getFullCoordinate();
 
       CreateSecretRequest request = CreateSecretRequest.builder()
@@ -88,6 +96,8 @@ public class AWSSecretManagerPersistence implements SecretPersistence {
         .build();
 
       client.createSecret(request);
+
+      this.allowDeletion(secretName);
     }
   }
 
@@ -95,7 +105,7 @@ public class AWSSecretManagerPersistence implements SecretPersistence {
    * List all the versions of a particular SecretCoordinate.
    */
   public List<SecretCoordinate> list(final String coordinateBase) {
-    try (final var client = clientSupplier.get()) {
+    try (final var client = secretManagerClientSupplier.get()) {
       Filter filter = Filter
         .builder()
         .key("name")
@@ -118,13 +128,52 @@ public class AWSSecretManagerPersistence implements SecretPersistence {
   }
 
   /**
+   * You can't just delete a secret in AWS Secret Manager, you first need to add
+   * a resource policy which allows you to delete the secret.
+   */
+  private void allowDeletion(final String secretName) {
+    try (final var secretManagerClient = secretManagerClientSupplier.get();
+         final var stsClient = stsClientSupplier.get()) {
+      String account = stsClient.getCallerIdentity().account();
+
+      String policy = String.format(
+        """
+        {
+          "Version":"2012-10-17",
+          "Statement": {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "%s"
+            },
+            "Action": "secretsmanager:DeleteSecret",
+            "Resource": "*"
+          }
+        }
+        """,
+        account
+      );
+
+      PutResourcePolicyRequest request = PutResourcePolicyRequest
+        .builder()
+        .secretId(secretName)
+        .resourcePolicy(policy)
+        .build();
+
+      secretManagerClient.putResourcePolicy(request);
+    }
+  }
+
+  /**
    * Delete a secret.
    */
   public void delete(final SecretCoordinate coordinate) {
-    try (final var client = clientSupplier.get()) {
+    try (final var client = secretManagerClientSupplier.get()) {
       String secretName = coordinate.getFullCoordinate();
 
-      DeleteSecretRequest request = DeleteSecretRequest.builder().build();
+      DeleteSecretRequest request = DeleteSecretRequest
+        .builder()
+        .recoveryWindowInDays(Long.valueOf(7))
+        .build();
 
       client.deleteSecret(request);
     }
